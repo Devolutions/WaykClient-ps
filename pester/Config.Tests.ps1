@@ -2,8 +2,7 @@ Import-Module "$PSScriptRoot/../WaykClient"
 
 Describe 'Wayk Client config' {
 	InModuleScope WaykClient {
-		Mock Get-WaykClientPath { Join-Path $TestDrive "Global" } -ParameterFilter { $PathType -eq "GlobalPath" }
-		Mock Get-WaykClientPath { Join-Path $TestDrive "Local" } -ParameterFilter { $PathType -eq "LocalPath" }
+		Mock Get-WaykClientPath { Join-Path $TestDrive "config" }
 
 		Context 'Empty configuration files' {
 			It 'Sets friendly name with special characters' {
