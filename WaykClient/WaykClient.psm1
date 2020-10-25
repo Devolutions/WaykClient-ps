@@ -1,5 +1,6 @@
-$module = 'WaykClient'
-$manifest = Import-PowerShellDataFile -Path "$PSScriptRoot/$module.psd1"
+
+$ModuleName = $(Get-Item $PSCommandPath).BaseName
+$Manifest = Import-PowerShellDataFile -Path $(Join-Path $PSScriptRoot "${ModuleName}.psd1")
 
 Export-ModuleMember -Cmdlet @($manifest.CmdletsToExport)
 
@@ -17,6 +18,8 @@ Foreach ($Import in @($Public + $Private))
         Write-Error -Message "Failed to import function $($Import.FullName): $_"
     }
 }
+
+Export-ModuleMember -Function @($Manifest.FunctionsToExport)
 
 if (Get-IsWindows) {
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;

@@ -91,17 +91,10 @@ class WaykClientConfig
 function Get-WaykClientConfigFile
 {
     param(
-        [switch] $Global
     )
 
-    [WaykClientInfo]$WaykInfo = Get-WaykClientInfo
-
-    if ($Global) {
-        $ConfigFile = $WaykInfo.GlobalConfigFile
-    } else {
-        $ConfigFile = $WaykInfo.ConfigFile
-    }
-
+    $ConfigPath = Get-WaykClientPath
+    $ConfigFile = Join-Path $ConfigPath "WaykNow.cfg"
     return $ConfigFile
 }
 
@@ -109,8 +102,6 @@ function Set-WaykClientConfig
 {
     [CmdletBinding()]
     param(
-        [switch] $Global,
-
         [string] $FriendlyName,
         [ValidateSet("en", "fr", "de", "it", "pl", "zh-CN", "zh-TW")]
         [string] $Language,
@@ -150,7 +141,7 @@ function Set-WaykClientConfig
         [bool] $AutoUpdateEnabled
     )
 
-    $ConfigFile = Get-WaykClientConfigFile -Global:$Global
+    $ConfigFile = Get-WaykClientConfigFile
 
     if (Test-Path $ConfigFile) {
         $json = Get-Content -Path $ConfigFile -Encoding UTF8 | ConvertFrom-Json
@@ -194,21 +185,12 @@ function Get-WaykClientConfig
     [CmdletBinding()]
     [OutputType('WaykClientConfig')]
     param(
-        [switch] $Global = $false
     )
 
-    if (-Not $Global) {
-        $LocalConfigFile = Get-WaykClientConfigFile
+    $ConfigFile = Get-WaykClientConfigFile
 
-        if (Test-Path $LocalConfigFile) {
-            $LocalJson = Get-Content -Path $LocalConfigFile -Encoding UTF8 | ConvertFrom-Json
-        }
-    }
-
-    $GlobalConfigFile = Get-WaykClientConfigFile -Global
-
-    if (Test-Path $GlobalConfigFile) {
-        $GlobalJson = Get-Content -Path $GlobalConfigFile -Encoding UTF8 | ConvertFrom-Json
+    if (Test-Path $ConfigFile) {
+        $ConfigJson = Get-Content -Path $ConfigFile -Encoding UTF8 | ConvertFrom-Json
     }
 
     $config = [WaykClientConfig]::new()
@@ -218,12 +200,8 @@ function Get-WaykClientConfig
             $Name = $_.Name
             $Property = $null
 
-            if ($LocalJson -And $LocalJson.PSObject.Properties[$Name]) {
-                $Property = $LocalJson.PSObject.Properties[$Name]
-            }
-
-            if ($GlobalJson -And $GlobalJson.PSObject.Properties[$Name]) {
-                $Property = $GlobalJson.PSObject.Properties[$Name]
+            if ($ConfigJson -And $ConfigJson.PSObject.Properties[$Name]) {
+                $Property = $ConfigJson.PSObject.Properties[$Name]
             }
 
             if ($Property) {
@@ -241,13 +219,8 @@ function Get-WaykClientConfig
         $AccessControl = $null
         $Property = $null
 
-        if ($LocalJson -And $LocalJson.PSObject.Properties['AccessControl']) {
-            $AccessControl = $LocalJson.PSObject.Properties['AccessControl'].Value
-            $Property = $AccessControl.PSObject.Properties[$ShortName]
-        }
-
-        if ($GlobalJson -And $GlobalJson.PSObject.Properties['AccessControl']) {
-            $AccessControl = $GlobalJson.PSObject.Properties['AccessControl'].Value
+        if ($ConfigJson -And $ConfigJson.PSObject.Properties['AccessControl']) {
+            $AccessControl = $ConfigJson.PSObject.Properties['AccessControl'].Value
             $Property = $AccessControl.PSObject.Properties[$ShortName]
         }
 
@@ -259,5 +232,3 @@ function Get-WaykClientConfig
 
     return $config
 }
-
-Export-ModuleMember -Function Set-WaykClientConfig, Get-WaykClientConfig

@@ -21,7 +21,8 @@ function Get-WindowsHostArch
 }
 
 function Get-UninstallRegistryKey(
-	[string] $display_name = 'Wayk Now'
+    [Parameter(Mandatory=$true, Position=0)]
+	[string] $DisplayName
 ){
     if ([System.Environment]::Is64BitOperatingSystem) {
         $uninstall_base_reg = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
@@ -30,7 +31,7 @@ function Get-UninstallRegistryKey(
     }
 
     return Get-ChildItem $uninstall_base_reg `
-        | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_ -Match $display_name };
+        | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_ -Match $DisplayName };
 }
 
 function New-TemporaryDirectory()

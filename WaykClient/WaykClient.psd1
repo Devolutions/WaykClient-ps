@@ -69,9 +69,10 @@ CLRVersion = '4.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Get-WaykClientVersion', 'Get-WaykClientPackage', 'Install-WaykClient', 'Uninstall-WaykClient', 'Update-WaykClient',
+FunctionsToExport = @('Get-WaykClientVersion', 'Get-WaykClientPackage',
+    'Install-WaykClient', 'Uninstall-WaykClient', 'Update-WaykClient',
     'Start-WaykClient', 'Stop-WaykClient', 'Restart-WaykClient', 'Get-WaykClientCommand',
-    'Set-WaykClientConfig', 'Get-WaykClientInfo', 'Get-WaykClientPath', 'Get-WaykClientConfig')
+    'Set-WaykClientConfig', 'Get-WaykClientPath', 'Get-WaykClientConfig')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -100,13 +101,13 @@ PrivateData = @{
         Tags = 'Wayk', 'Client', 'WaykClient', 'WaykNow', 'WaykBastion', 'Windows', 'macOS', 'Linux', 'RemoteDesktop'
 
         # A URL to the license for this module.
-        # LicenseUri = 'https://github.com/Devolutions/WaykClient-ps/blob/master/LICENSE-MIT'
+        LicenseUri = 'https://github.com/Devolutions/WaykClient-ps/blob/master/LICENSE-MIT'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/Devolutions/WaykClient-ps'
 
         # A URL to an icon representing this module.
-        IconUri = 'https://webdevolutions.blob.core.windows.net/images/projects/wayk-now/logos/wayk-now-icon-ps.png'
+        IconUri = 'https://raw.githubusercontent.com/Devolutions/WaykClient-ps/master/logo.png'
 
         # ReleaseNotes of this module
         # ReleaseNotes = ''
