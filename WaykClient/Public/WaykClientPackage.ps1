@@ -46,7 +46,7 @@ function Get-WaykClientPackage
 	)
 
 	$VersionQuad = '';
-	$ProductsUrl = "https://devolutions.net/products.htm"
+	$ProductsUrl = "https://devolutions.net/productinfo.htm"
 
 	if ($Env:WAYK_PRODUCT_INFO_URL) {
 		$ProductsUrl = $Env:WAYK_PRODUCT_INFO_URL

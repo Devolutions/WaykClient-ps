@@ -113,7 +113,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        Prerelease = 'rc2'
+        #Prerelease = 'rc1'
 
     } # End of PSData hashtable
 
