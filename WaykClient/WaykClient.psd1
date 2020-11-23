@@ -72,7 +72,8 @@ CLRVersion = '4.0'
 FunctionsToExport = @('Get-WaykClientVersion', 'Get-WaykClientPackage',
     'Install-WaykClient', 'Uninstall-WaykClient', 'Update-WaykClient',
     'Start-WaykClient', 'Stop-WaykClient', 'Restart-WaykClient', 'Get-WaykClientCommand',
-    'Set-WaykClientConfig', 'Get-WaykClientPath', 'Get-WaykClientConfig')
+    'Set-WaykClientConfig', 'Get-WaykClientPath', 'Get-WaykClientConfig',
+    'New-WaykPSSession', 'Enter-WaykPSSession')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
