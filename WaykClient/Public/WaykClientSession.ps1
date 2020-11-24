@@ -1,14 +1,23 @@
 
-function Get-WaykPSBasePath
+function Get-WaykPSRemotingPath
 {
     [CmdletBinding()]
     param(
     )
 
-    # TODO: improve detection of path containing fake ssh executable
+    if ($IsWindows) {
+        $WaykClient = Get-WaykClientCommand
+        $WaykBinPath = $(Get-Item $WaykClient).Directory.FullName
+        $PSRemotingPath = Join-Path $WaykBinPath 'psremoting'
+    } elseif ($IsMacOS) {
+        $WaykBinPath = "/Applications/WaykClient.app/Contents/MacOS"
+        $PSRemotingPath = Join-Path $WaykBinPath 'psremoting'
+    } elseif ($IsLinux) {
+        $WaykLibPath = "/usr/lib"
+        $PSRemotingPath = Join-Path $WaykLibPath 'psremoting'
+    }
 
-    $WaykClient = Get-WaykClientCommand
-    $(Get-Item $WaykClient).Directory.FullName
+    $PSRemotingPath
 }
 
 function Enter-WaykPSEnvironment
@@ -23,13 +32,17 @@ function Enter-WaykPSEnvironment
         throw "Wayk PowerShell remoting requires PowerShell 7 or later"
     }
 
-    $WaykBasePath = Get-WaykPSBasePath
+    $PSRemotingPath = Get-WaykPSRemotingPath
+
+    if (-Not (Test-Path $PSRemotingPath -PathType 'Container')) {
+        throw "Could not find required Wayk PSRemoting directory: `"$PSRemotingPath`""
+    }
 
     $EnvPath = $Env:PATH
     $EnvPaths = $Env:PATH -Split $([IO.Path]::PathSeparator)
 
-    if ($EnvPaths[0] -ne $WaykBasePath) {
-        $Env:Path = "${WaykBasePath}$([IO.Path]::PathSeparator)$EnvPath"
+    if ($EnvPaths[0] -ne $PSRemotingPath) {
+        $Env:PATH = "${PSRemotingPath}$([IO.Path]::PathSeparator)$EnvPath"
     }
 }
 
@@ -42,7 +55,7 @@ function Connect-WaykPSSession
         [PSCredential] $Credential
     )
 
-    # Call Wayk Client to initiate the connect and return JetUrl
+    Enter-WaykPSEnvironment
 
     $UserName = $Credential.UserName
     $Password = $Credential.GetNetworkCredential().Password
@@ -53,22 +66,17 @@ function Connect-WaykPSSession
         Hostname = $HostName
         Username = $UserName
         Password = $Password
-    } | ConvertTo-Json | Out-String
+    } | ConvertTo-Json -Compress | Out-String
 
-    Write-Host "Input: ${CommandOutput}"
-
-    $CommandOutput = $CommandInput | & "$WaykClient" 'pwsh' '-'
-
-    Write-Host "Output: ${CommandOutput}"
-
+    $CommandOutput = $CommandInput | & "$WaykClient" 'pwsh' '-' 2>/dev/null
     $CommandOutput = $CommandOutput | ConvertFrom-Json
 
     if (-Not $CommandOutput.Success) {
-        throw "Failed to connect to ${HostName} with user ${UserName}"
+        throw "Failed to connect to ${HostName} with user ${UserName} with error $($CommandOutput.Error)"
     }
 
     $JetUrl = $CommandOutput.JetUrl
-    $Env:JET_URL = $JetUrl
+    $Env:JETSOCAT_ARGS = "connect $JetUrl"
 
     return $CommandOutput
 }
@@ -83,8 +91,7 @@ function New-WaykPSSession
         [PSCredential] $Credential
     )
 
-    Enter-WaykPSEnvironment
-    Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
+    $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     New-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
 }
 
@@ -98,7 +105,6 @@ function Enter-WaykPSSession
         [PSCredential] $Credential
     )
 
-    Enter-WaykPSEnvironment
-    Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
+    $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     Enter-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
 }
