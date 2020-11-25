@@ -96,6 +96,7 @@ function New-WaykPSSession
         [PSCredential] $Credential
     )
 
+    $UserName = $Credential.UserName
     $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     New-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
 }
@@ -110,6 +111,7 @@ function Enter-WaykPSSession
         [PSCredential] $Credential
     )
 
+    $UserName = $Credential.UserName
     $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     Enter-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
 }
