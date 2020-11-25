@@ -68,7 +68,12 @@ function Connect-WaykPSSession
         Password = $Password
     } | ConvertTo-Json -Compress | Out-String
 
-    $CommandOutput = $CommandInput | & "$WaykClient" 'pwsh' '-' 2>/dev/null
+    if ($IsWindows) {
+        $WaykClient = $WaykClient -Replace '.exe', '.com'
+    }
+
+    $CommandOutput = $CommandInput | & "$WaykClient" 'pwsh' '-' 2>$null
+    
     $CommandOutput = $CommandOutput | ConvertFrom-Json
 
     if (-Not $CommandOutput.Success) {
