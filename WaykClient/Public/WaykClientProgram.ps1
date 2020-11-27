@@ -17,6 +17,11 @@ function Get-WaykClientCommand
 
         if ($Command) {
             $WaykClientCommand = $Command.Source
+
+            $FileItem = Get-Item $WaykClientCommand -Force -ErrorAction 'SilentlyContinue'
+            if ($FileItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+                $WaykClientCommand = $FileItem.Target # resolve symlink
+            }
         } else {
             $WaykClientAppExe = "/Applications/WaykClient.app/Contents/MacOS/WaykClient"
 
