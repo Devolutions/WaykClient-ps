@@ -12,7 +12,7 @@
 RootModule = 'WaykClient.psm1'
 
 # Version number of this module.
-ModuleVersion = '2020.3.0'
+ModuleVersion = '2020.3.1'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop', 'Core'
@@ -114,7 +114,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        #Prerelease = 'rc1'
+        Prerelease = 'rc1'
 
     } # End of PSData hashtable
 
@@ -127,4 +127,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-

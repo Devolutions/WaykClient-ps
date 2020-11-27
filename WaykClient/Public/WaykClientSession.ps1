@@ -26,8 +26,6 @@ function Enter-WaykPSEnvironment
     param(
     )
 
-    # Add fake ssh to beginning of PATH environment variable if not present
-
     if ($PSEdition -eq 'Desktop') {
         throw "Wayk PowerShell remoting requires PowerShell 7 or later"
     }
@@ -38,11 +36,23 @@ function Enter-WaykPSEnvironment
         throw "Could not find required Wayk PSRemoting directory: `"$PSRemotingPath`""
     }
 
-    $EnvPath = $Env:PATH
-    $EnvPaths = $Env:PATH -Split $([IO.Path]::PathSeparator)
+    $EnvPaths = $Env:PATH -Split $([IO.Path]::PathSeparator) | Where-Object { $_ -ne $PSRemotingPath }
+    $Env:PATH = $(@($PSRemotingPath) + $EnvPaths) -Join $([IO.Path]::PathSeparator)
+}
 
-    if ($EnvPaths[0] -ne $PSRemotingPath) {
-        $Env:PATH = "${PSRemotingPath}$([IO.Path]::PathSeparator)$EnvPath"
+function Exit-WaykPSEnvironment
+{
+    [CmdletBinding()]
+    param(
+    )
+
+    Remove-Item Env:JETSOCAT_ARGS -ErrorAction 'SilentlyContinue'
+
+    $PSRemotingPath = Get-WaykPSRemotingPath
+
+    if (Test-Path $PSRemotingPath -PathType 'Container') {
+        $EnvPaths = $Env:PATH -Split $([IO.Path]::PathSeparator) | Where-Object { $_ -ne $PSRemotingPath }
+        $Env:PATH = $EnvPaths -Join $([IO.Path]::PathSeparator)
     }
 }
 
@@ -99,6 +109,7 @@ function New-WaykPSSession
     $UserName = $Credential.UserName
     $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     New-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
+    Exit-WaykPSEnvironment
 }
 
 function Enter-WaykPSSession
@@ -114,4 +125,5 @@ function Enter-WaykPSSession
     $UserName = $Credential.UserName
     $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     Enter-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
+    Exit-WaykPSEnvironment
 }
