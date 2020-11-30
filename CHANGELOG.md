@@ -2,7 +2,7 @@
 
 This document provides a list of notable changes introduced in the Wayk Client PowerShell module.
 
-## 2020.3.1 (2020-11-27)
+## 2020.3.1 (2020-11-30)
   * Add initial support for Wayk PowerShell remoting.
  
 ## 2020.3.0 (2020-10-28)
