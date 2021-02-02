@@ -73,6 +73,7 @@ function Connect-WaykPSSession
     $WaykClient = Get-WaykClientCommand
 
     $CommandInput = [PSCustomObject]@{
+        Type = "start_pwsh_session"
         Hostname = $HostName
         Username = $UserName
         Password = $Password
@@ -126,4 +127,45 @@ function Enter-WaykPSSession
     $Result = Connect-WaykPSSession -HostName:$HostName -Credential:$Credential
     Enter-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
     Exit-WaykPSEnvironment
+}
+
+function Connect-WaykRdpTcpSession
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName
+    )
+
+    $WaykClient = Get-WaykClientCommand
+
+    $CommandInput = [PSCustomObject]@{
+        Type = "start_rdp_tcp_session"
+        Hostname = $HostName
+    } | ConvertTo-Json -Compress | Out-String
+
+    if ($IsWindows) {
+        $WaykClient = $WaykClient -Replace '.exe', '.com'
+    }
+
+    $CommandOutput = $CommandInput | & "$WaykClient" 'rdp-tcp' '-' 2>$null
+
+    $CommandOutput = $CommandOutput | ConvertFrom-Json
+
+    if (-Not $CommandOutput.Success) {
+        throw "Failed to connect to ${HostName} with error $($CommandOutput.Error)"
+    }
+
+    $RdpConfig = $CommandOutput.RdpConfig = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($CommandOutput.RdpConfig))
+    $RdpConfigFile = New-TemporaryFile
+
+    "$RdpConfig" | Out-File -FilePath "$RdpConfigFile"
+
+    if ($IsWindows) {
+        $RdpApp = "mstsc"
+    } else {
+        $RdpApp = "xfreerdp"
+    }
+
+    & $RdpApp "$RdpConfigFile"
 }
