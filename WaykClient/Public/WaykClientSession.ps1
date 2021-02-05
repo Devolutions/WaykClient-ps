@@ -157,15 +157,12 @@ function Connect-WaykRdpTcpSession
     }
 
     $RdpConfig = $CommandOutput.RdpConfig = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($CommandOutput.RdpConfig))
-    $RdpConfigFile = New-TemporaryFile
-
-    "$RdpConfig" | Out-File -FilePath "$RdpConfigFile"
 
     if ($IsWindows) {
-        $RdpApp = "mstsc"
+        $RdpConfigFile = New-TemporaryFile
+        "$RdpConfig" | Out-File -FilePath "$RdpConfigFile"
+        Invoke-Expression "mstsc ${RdpConfigFile}"
     } else {
-        $RdpApp = "xfreerdp"
+        Invoke-Expression "xfreerdp ${RdpConfig}"
     }
-
-    & $RdpApp "$RdpConfigFile"
 }
