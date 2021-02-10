@@ -161,8 +161,10 @@ function Connect-WaykRdpTcpSession
     if ($IsWindows) {
         $RdpConfigFile = New-TemporaryFile
         "$RdpConfig" | Out-File -FilePath "$RdpConfigFile"
-        Invoke-Expression "mstsc ${RdpConfigFile}"
+        Start-Process -FilePath "mstsc" -ArgumentList "${RdpConfigFile}"
     } else {
-        Invoke-Expression "xfreerdp ${RdpConfig}"
+        # -Wait flag is required here to block PowerShell command parsing from
+        # stdin while xfreerdp asks for credentials
+        Start-Process -FilePath "xfreerdp" -Wait -ArgumentList "${RdpConfig}"
     }
 }
