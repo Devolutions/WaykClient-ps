@@ -213,7 +213,7 @@ function Enter-WaykRdpSession
 
     if ($IsWindows) {
         $RdpApp = "mstsc"
-        Start-Process -FilePath:$RdpApp -ArgumentList:$RdpConfigFile
+        Start-Process -FilePath:$RdpApp -ArgumentList:$RdpArgs
     } else {
         $RdpApp = "xfreerdp"
         $RdpArgs += "/sec:nla"
@@ -225,8 +225,9 @@ function Enter-WaykRdpSession
         if ($Domain) {
             $RdpArgs += "/d:${Domain}"
         }
-        Start-Process -FilePath:$RdpApp -ArgumentList:$RdpConfigFile -Wait
+        
+        
+        Start-Process -FilePath:$RdpApp -ArgumentList:$RdpArgs -Wait
     }
 }
-
 
