@@ -12,7 +12,7 @@
 RootModule = 'WaykClient.psm1'
 
 # Version number of this module.
-ModuleVersion = '2020.3.1'
+ModuleVersion = '2020.3.2'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop', 'Core'
@@ -73,7 +73,8 @@ FunctionsToExport = @('Get-WaykClientVersion', 'Get-WaykClientPackage',
     'Install-WaykClient', 'Uninstall-WaykClient', 'Update-WaykClient',
     'Start-WaykClient', 'Stop-WaykClient', 'Restart-WaykClient', 'Get-WaykClientCommand',
     'Set-WaykClientConfig', 'Get-WaykClientPath', 'Get-WaykClientConfig',
-    'Connect-WaykPSSession', 'New-WaykPSSession', 'Enter-WaykPSSession')
+    'Connect-WaykPSSession', 'New-WaykPSSession', 'Enter-WaykPSSession',
+    'Connect-WaykRdpSession', 'Enter-WaykRdpSession')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -114,7 +115,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        #Prerelease = 'rc1'
+        Prerelease = 'rc1'
 
     } # End of PSData hashtable
 

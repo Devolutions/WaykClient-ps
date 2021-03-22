@@ -127,3 +127,107 @@ function Enter-WaykPSSession
     Enter-PSSession -UserName:$UserName -HostName:$HostName -SSHTransport
     Exit-WaykPSEnvironment
 }
+
+function DecodeBase64UrlSafe($Base64Url)
+{
+    # short circuit on empty strings
+    if ($Base64Url -eq [string]::Empty) {
+        return [string]::Empty
+    }
+
+    # put the standard unsafe characters back
+    $s = $Base64Url.Replace('-', '+').Replace('_', '/')
+
+    # put the padding back
+    switch ($s.Length % 4) {
+        0 { break; }             # no padding needed
+        2 { $s += '=='; break; } # two pad chars
+        3 { $s += '='; break; }  # one pad char
+        default { throw "Invalid Base64Url string" }
+    }
+
+    return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($s))
+}
+
+function Connect-WaykRdpSession
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName,
+        [String] $TransportProtocol = "tcp",
+        [String] $RdpOutputFile
+    )
+
+    $WaykClient = Get-WaykClientCommand
+
+    $CommandInput = [PSCustomObject]@{
+        Hostname = $HostName
+    } | ConvertTo-Json -Compress | Out-String
+
+    if ($IsWindows) {
+        $WaykClient = $WaykClient -Replace '.exe', '.com'
+    }
+
+    $CommandOutput = $CommandInput | & "$WaykClient" 'rdp-tcp' '-' 2>$null
+
+    $CommandOutput = $CommandOutput | ConvertFrom-Json
+
+    if (-Not $CommandOutput.Success) {
+        throw "Failed to connect to ${HostName} with error $($CommandOutput.Error)"
+    }
+
+    $RdpConfig = DecodeBase64UrlSafe($CommandOutput.RdpConfig)
+
+    if ($RdpOutputFile) {
+        $RdpConfig | Out-File -FilePath $RdpOutputFile
+        return
+    }
+
+    return $RdpConfig
+}
+
+function Enter-WaykRdpSession
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName,
+        [String] $TransportProtocol = "tcp",
+        [String] $UserName,
+        [String] $Domain
+    )
+
+    if ($IsWindows -And ($UserName -Or $Domain)) {
+        # There is no simple way to specify user name and domain to the mstsc,
+        # they are only can be stored on the machine globally for the specified
+        # hostname using cmdkey command, which may leave a trace on the machine
+        throw "-UserName/-Domain arguements are not supported on the Windows platform"
+    }
+
+    $RdpConfigFile = $(New-TemporaryFile) -Replace ".tmp", ".rdp"
+
+    Connect-WaykRdpSession -HostName:$HostName -TransportProtocol:$TransportProtocol -RdpOutputFile:$RdpConfigFile
+
+    $RdpArgs = @("${RdpConfigFile}")
+
+    if ($IsWindows) {
+        $RdpApp = "mstsc"
+        Start-Process -FilePath:$RdpApp -ArgumentList:$RdpArgs
+    } else {
+        $RdpApp = "xfreerdp"
+        $RdpArgs += "/sec:nla"
+        $RdpArgs += "/cert-ignore"
+        $RdpArgs += "/from-stdin"
+        if ($UserName) {
+            $RdpArgs += "/u:${UserName}"
+        }
+        if ($Domain) {
+            $RdpArgs += "/d:${Domain}"
+        }
+        
+        
+        Start-Process -FilePath:$RdpApp -ArgumentList:$RdpArgs -Wait
+    }
+}
+
