@@ -24,11 +24,7 @@ function Get-UninstallRegistryKey(
     [Parameter(Mandatory=$true, Position=0)]
 	[string] $DisplayName
 ){
-    if ([System.Environment]::Is64BitOperatingSystem) {
-        $uninstall_base_reg = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
-    } else {
-        $uninstall_base_reg = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
-    }
+    $uninstall_base_reg = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
 
     return Get-ChildItem $uninstall_base_reg `
         | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_ -Match $DisplayName };
