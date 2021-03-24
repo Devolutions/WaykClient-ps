@@ -169,7 +169,12 @@ function Connect-WaykRdpSession
         $WaykClient = $WaykClient -Replace '.exe', '.com'
     }
 
+    $OldInputEncoding = [Console]::InputEncoding
+    [Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
+
     $CommandOutput = $CommandInput | & "$WaykClient" 'rdp-tcp' '-' 2>$null
+
+    [Console]::InputEncoding = $OldInputEncoding
 
     $CommandOutput = $CommandOutput | ConvertFrom-Json
 
