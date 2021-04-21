@@ -210,7 +210,7 @@ function Enter-WaykRdpSession
         throw "-UserName/-Domain arguements are not supported on the Windows platform"
     }
 
-    $RdpConfigFile = $(New-TemporaryFile) -Replace ".tmp", ".rdp"
+    $RdpConfigFile = $(New-TemporaryFile) -Replace "[.][^.]+$", ".rdp"
 
     Connect-WaykRdpSession -HostName:$HostName -TransportProtocol:$TransportProtocol -RdpOutputFile:$RdpConfigFile
 
