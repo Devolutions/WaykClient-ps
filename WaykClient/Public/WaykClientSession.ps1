@@ -91,7 +91,7 @@ function Connect-WaykPSSession
     }
 
     $JetUrl = $CommandOutput.JetUrl
-    $Env:JETSOCAT_ARGS = "connect $JetUrl"
+    $Env:JETSOCAT_ARGS = "forward $JetUrl -"
 
     return $CommandOutput
 }
