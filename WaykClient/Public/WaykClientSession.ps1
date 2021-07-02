@@ -83,7 +83,7 @@ function Connect-WaykPSSession
     }
 
     $CommandOutput = $CommandInput | & "$WaykClient" 'pwsh' '-' 2>$null
-    
+
     $CommandOutput = $CommandOutput | ConvertFrom-Json
 
     if (-Not $CommandOutput.Success) {
@@ -155,7 +155,6 @@ function Connect-WaykRdpSession
     param(
         [Parameter(Mandatory=$true)]
         [String] $HostName,
-        [String] $TransportProtocol = "tcp",
         [String] $RdpOutputFile
     )
 
@@ -198,7 +197,6 @@ function Enter-WaykRdpSession
     param(
         [Parameter(Mandatory=$true)]
         [String] $HostName,
-        [String] $TransportProtocol = "tcp",
         [String] $UserName,
         [String] $Domain
     )
@@ -212,7 +210,7 @@ function Enter-WaykRdpSession
 
     $RdpConfigFile = $(New-TemporaryFile) -Replace "[.][^.]+$", ".rdp"
 
-    Connect-WaykRdpSession -HostName:$HostName -TransportProtocol:$TransportProtocol -RdpOutputFile:$RdpConfigFile
+    Connect-WaykRdpSession -HostName:$HostName -RdpOutputFile:$RdpConfigFile
 
     $RdpArgs = @("${RdpConfigFile}")
 
@@ -230,9 +228,54 @@ function Enter-WaykRdpSession
         if ($Domain) {
             $RdpArgs += "/d:${Domain}"
         }
-        
-        
+
         Start-Process -FilePath:$RdpApp -ArgumentList:$RdpArgs -Wait
     }
+}
+
+function Enter-WaykSshSession
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName,
+        [Parameter(Mandatory=$true)]
+        [String] $UserName
+    )
+
+    $WaykClient = Get-WaykClientCommand
+
+    $CommandInput = [PSCustomObject]@{
+        Hostname = $HostName
+    } | ConvertTo-Json -Compress | Out-String
+
+    if ($IsWindows) {
+        $WaykClient = $WaykClient -Replace '.exe', '.com'
+    }
+
+    $CommandOutput = $CommandInput | & "$WaykClient" 'ssh' '-' 2>$null
+
+    $CommandOutput = $CommandOutput | ConvertFrom-Json
+
+    if (-Not $CommandOutput.Success) {
+        throw "Failed to connect to ${HostName} with user ${UserName} with error $($CommandOutput.Error)"
+    }
+
+    $JetUrl = $CommandOutput.JetUrl
+
+    # Give access to jetsocat (and fake ssh)
+    Enter-WaykPSEnvironment
+
+    # Spawn local jetsocat tunnel for ssh ↔ jetsocat ↔ wss/jet-tcp/… ↔ gateway
+    # FIXME: find a unused port
+    Start-Process -FilePath "jetsocat" -ArgumentList "forward", "$JetUrl", "tcp-listen://localhost:18297"
+
+    # Get back access to system ssh
+    Exit-WaykPSEnvironment
+
+    $Prgm = "ssh"
+    $Args = "localhost", "-p", "18297", "-l", "${UserName}"
+
+    Start-Process -FilePath:$Prgm  -ArgumentList:$Args -Wait
 }
 
