@@ -275,6 +275,11 @@ function Enter-WaykSshSession
 
     $Prgm = "ssh"
     $Args = "localhost", "-p", "18297", "-l", "${UserName}"
+    if ($IsWindows) {
+        $Args += "-o", "GlobalKnownHostsFile=NUL", "-o", "UserKnownHostsFile=NUL"
+    } else {
+        $Args += "-o", "GlobalKnownHostsFile=/dev/null", "-o", "UserKnownHostsFile=/dev/null"
+    }
 
     Start-Process -FilePath:$Prgm  -ArgumentList:$Args -Wait
 }
