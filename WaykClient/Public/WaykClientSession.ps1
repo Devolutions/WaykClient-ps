@@ -233,6 +233,47 @@ function Enter-WaykRdpSession
     }
 }
 
+Function Get-RandomPort
+{
+    Param(
+        [Int] $MaxTries = 100
+    );
+
+    $Result = -1;
+    $NbTries = 0;
+
+    do {
+        $NbTries += 1;
+
+        $Port = Get-Random -Min 10001 -Max 32767;
+        if (-Not (Test-Connection localhost -TcpPort $Port)) {
+            $Result = $Port;
+        }
+    } while (($Result -lt 0) -and ($NbTries -lt $MaxTries));
+
+    return $Result;
+}
+
+Function Spawn-JetsocatWithLocalTcpListener
+{
+    Param(
+        [String] $JetPipe,
+        [Int] $TcpPort
+    );
+
+    # Give access to jetsocat (and fake ssh)
+    Enter-WaykPSEnvironment
+
+    # Spawn local jetsocat tunnel for ssh ↔ jetsocat ↔ wss/jet-tcp/… ↔ gateway
+    Start-Process -FilePath "jetsocat" -ArgumentList "forward", "$JetPipe", "tcp-listen://localhost:$TcpPort"
+
+    # Get back access to system ssh
+    Exit-WaykPSEnvironment
+
+    # Wait a bit for jetsocat to be ready
+    Start-Sleep -Seconds 0.5
+}
+
 function Enter-WaykSshSession
 {
     [CmdletBinding()]
@@ -262,25 +303,17 @@ function Enter-WaykSshSession
     }
 
     $JetUrl = $CommandOutput.JetUrl
-
-    # Give access to jetsocat (and fake ssh)
-    Enter-WaykPSEnvironment
-
-    # Spawn local jetsocat tunnel for ssh ↔ jetsocat ↔ wss/jet-tcp/… ↔ gateway
-    # FIXME: find a unused port
-    Start-Process -FilePath "jetsocat" -ArgumentList "forward", "$JetUrl", "tcp-listen://localhost:18297"
-
-    # Get back access to system ssh
-    Exit-WaykPSEnvironment
+    $PortToUse = Get-RandomPort
+    Spawn-JetsocatWithLocalTcpListener $JetUrl $PortToUse
 
     $Prgm = "ssh"
-    $Args = "localhost", "-p", "18297", "-l", "${UserName}"
+    $Args = "localhost", "-p", "$PortToUse", "-l", "${UserName}"
     if ($IsWindows) {
         $Args += "-o", "GlobalKnownHostsFile=NUL", "-o", "UserKnownHostsFile=NUL"
     } else {
         $Args += "-o", "GlobalKnownHostsFile=/dev/null", "-o", "UserKnownHostsFile=/dev/null"
     }
 
-    Start-Process -FilePath:$Prgm  -ArgumentList:$Args -Wait
+    Start-Process -FilePath:$Prgm -ArgumentList:$Args -Wait
 }
 
