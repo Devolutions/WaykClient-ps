@@ -317,3 +317,76 @@ function Enter-WaykSshSession
     Start-Process -FilePath:$Prgm -ArgumentList:$Args -Wait
 }
 
+function Connect-WaykSftpSession
+{
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName,
+        [Parameter(Mandatory=$true)]
+        [PSCredential] $Credential
+    )
+
+    Enter-WaykPSEnvironment
+
+    $UserName = $Credential.UserName
+    $Password = $Credential.GetNetworkCredential().Password
+
+    $WaykClient = Get-WaykClientCommand
+
+    $CommandInput = [PSCustomObject]@{
+        Hostname = $HostName
+        Username = $UserName
+        Password = $Password
+    } | ConvertTo-Json -Compress | Out-String
+
+    if ($IsWindows) {
+        $WaykClient = $WaykClient -Replace '.exe', '.com'
+    }
+
+    $CommandOutput = $CommandInput | & "$WaykClient" 'sftp' '-' 2>$null
+
+    $CommandOutput = $CommandOutput | ConvertFrom-Json
+
+    if (-Not $CommandOutput.Success) {
+        throw "Failed to connect to ${HostName} with user ${UserName} with error $($CommandOutput.Error)"
+    }
+
+    $JetUrl = $CommandOutput.JetUrl
+    $Env:JETSOCAT_ARGS = "forward $JetUrl -"
+
+    return $CommandOutput
+}
+
+function New-WaykSftpSession
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName,
+        [Parameter(Mandatory=$true)]
+        [PSCredential] $Credential
+    )
+
+    $UserName = $Credential.UserName
+    $Result = Connect-WaykSftpSession -HostName:$HostName -Credential:$Credential
+    New-SftpSession -UserName:$UserName -HostName:$HostName -SSHTransport
+    Exit-WaykPSEnvironment
+}
+
+function Enter-WaykSftpSession
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $HostName,
+        [Parameter(Mandatory=$true)]
+        [PSCredential] $Credential
+    )
+
+    $UserName = $Credential.UserName
+    $Result = Connect-WaykSftpSession -HostName:$HostName -Credential:$Credential
+    $Args = "-D", "jetsocat"
+    Start-Process -FilePath:"sftp" -ArgumentList:$Args -Wait
+    Exit-WaykPSEnvironment
+}
+

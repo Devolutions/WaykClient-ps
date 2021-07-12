@@ -74,7 +74,8 @@ FunctionsToExport = @('Get-WaykClientVersion', 'Get-WaykClientPackage',
     'Start-WaykClient', 'Stop-WaykClient', 'Restart-WaykClient', 'Get-WaykClientCommand',
     'Set-WaykClientConfig', 'Get-WaykClientPath', 'Get-WaykClientConfig',
     'Connect-WaykPSSession', 'New-WaykPSSession', 'Enter-WaykPSSession',
-    'Connect-WaykRdpSession', 'Enter-WaykRdpSession', 'Enter-WaykSshSession')
+    'Connect-WaykRdpSession', 'Enter-WaykRdpSession', 'Enter-WaykSshSession',
+    'Connect-WaykSftpSession', 'New-WaykSftpSession', 'Enter-WaykSftpSession')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -115,7 +116,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        Prerelease = 'rc2'
+        Prerelease = 'rc3'
 
     } # End of PSData hashtable
 
